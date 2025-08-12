@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
 </head>
-<body style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);" class="min-h-screen transition-all duration-300">
+<body style="background: #064e3b;" class="min-h-screen transition-all duration-300">
 
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'Analytics Dashboard'])
@@ -190,7 +190,7 @@
                     <div class="flex-1 overflow-y-auto bg-white bg-opacity-10 rounded-lg p-4 engineers-scroll min-h-0">
                         <div id="projectsBudgetSummary" class="space-y-3">
                             <!-- Budget summary will be loaded here -->
-                            <div class="text-center text-gray-600 py-8">
+                            <div class="text-center text-white py-8">
                                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-3"></div>
                                 <p class="text-sm">Loading projects...</p>
                             </div>
@@ -237,10 +237,10 @@
                         </div>
 
                         <!-- Scrollable Engineers List -->
-                        <div class="flex-1 overflow-y-auto bg-blue-100 bg-opacity-10 rounded-lg p-4 engineers-scroll min-h-0">
-                            <div id="engineersList" class="space-y-3">
+                        <div class="flex-1 overflow-y-auto bg-blue-200 bg-opacity-10 rounded-lg p-4 engineers-scroll min-h-0">
+                            <div id="engineersList" class="space-y-3 ">
                                 <!-- Engineers will be loaded here -->
-                                <div class="text-center text-gray-600 py-8">
+                                <div class="text-center text-white py-8 bg-blue-200 bg-opacity-10">
                                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
                                     <p class="text-sm">Loading engineers...</p>
                                 </div>
@@ -456,16 +456,16 @@
                         return `
                             <div class="bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-20 hover:bg-opacity-30 transition-all duration-200">
                                 <div class="flex justify-between items-start mb-2">
-                                    <h3 class="font-semibold text-gray-800 text-sm">${project.name}</h3>
+                                    <h2 class="font-bold text-gray-800 text-lg">${project.name}</h2>
                                     <span class="px-2 py-1 rounded text-xs font-bold text-white ${statusClass}">${statusText}</span>
                                 </div>
-                                <div class="text-xs text-gray-600 mb-2">
+                                <div class="text-base text-gray-800 mb-2">
                                     Budget: ₱${project.budget.toLocaleString()} | Spent: ₱${project.spent.toLocaleString()}
                                 </div>
                                 <div class="w-full bg-gray-300 rounded-full h-2 mb-1">
                                     <div class="h-2 rounded-full ${statusClass}" style="width: ${Math.min(percentUsed, 100)}%"></div>
                                 </div>
-                                <div class="text-xs text-gray-600">${percentUsed.toFixed(1)}% used</div>
+                                <div class="text-base text-gray-800">${percentUsed.toFixed(1)}% used</div>
                             </div>
                         `;
                     }).join('');
@@ -496,7 +496,7 @@
                             <div class="flex items-start space-x-3 p-3 rounded-lg ${bgClass}">
                                 <span class="text-lg">${iconClass}</span>
                                 <div class="flex-1">
-                                    <div class="font-semibold text-white">${alert.title}</div>
+                                    <div class="font-bold text-white">${alert.title}</div>
                                     <div class="text-sm text-green-200">${alert.message}</div>
                                     <div class="text-xs text-green-300 mt-1">${alert.time}</div>
                                 </div>
@@ -617,7 +617,7 @@
                 notification.style.transform = 'translate(-50%, -50%) scale(1)';
             });
 
-            // Remove notification after 1 second
+            // Remove notification after 1 seconds
             setTimeout(() => {
                 overlay.style.opacity = '0';
                 notification.style.opacity = '0';
@@ -661,7 +661,7 @@
                 engineersCount.textContent = engineers.length;
 
                 engineersList.innerHTML = engineers.map(engineer => `
-                    <div class="bg-gray-50 hover:bg-gray-100 rounded-xl p-4 transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-gray-300 hover:shadow-md">
+                    <div class="bg-green-100 hover:bg-green-100 rounded-xl p-4 transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-gray-300 hover:shadow-md">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
@@ -670,21 +670,20 @@
                                 <div>
                                     <div class="text-gray-800 font-semibold text-base group-hover:text-blue-700 transition-colors">${engineer.name}</div>
                                     <div class="text-gray-600 text-sm">${engineer.email || 'No email provided'}</div>
-                                    <div class="text-xs text-gray-500">${engineer.specialization || 'General Engineering'}</div>
                                 </div>
                             </div>
                             <div class="text-right">
                                 <div class="flex flex-col space-y-1">
                                     ${engineer.can_be_project_engineer ?
-                                        '<div class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Project Engineer</div>' :
-                                        '<div class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">Team Member</div>'
+                                        '<div class="text-xs bg-green-300 text-green-700 px-2 py-1 rounded-full">Project Engineer</div>' :
+                                        '<div class="text-xs bg-gray-300 text-gray-500 px-2 py-1 rounded-full">Team Member</div>'
                                     }
                                     ${engineer.can_be_monthly_engineer ?
-                                        '<div class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Monthly Work</div>' :
+                                        '<div class="text-xs bg-blue-300 text-blue-700 px-2 py-1 rounded-full">Monthly Work</div>' :
                                         ''
                                     }
                                 </div>
-                                <div class="text-gray-400 text-xs mt-2">Joined ${engineer.created_at ? new Date(engineer.created_at).toLocaleDateString() : 'N/A'}</div>
+                                <div class="text-black text-xs mt-2">Joined ${engineer.created_at ? new Date(engineer.created_at).toLocaleDateString() : 'N/A'}</div>
                             </div>
                         </div>
                     </div>
@@ -732,10 +731,12 @@
                         const isAtBottom = engineersContainer.scrollTop + engineersContainer.clientHeight >= engineersContainer.scrollHeight - 5;
                         if (isAtBottom) {
                             scrollIndicator.style.opacity = '1';
-                            scrollIndicator.innerHTML = '<span>📍 End of engineers list</span>';
+                            scrollIndicator.innerHTML = '<span>End of engineers list</span>';
+                            scrollIndicator.style.color = 'white';
                         } else {
                             scrollIndicator.style.opacity = '1';
                             scrollIndicator.innerHTML = '<span>↕️ Scroll to see more engineers</span>';
+                            scrollIndicator.style.color = 'black';
                         }
                     });
                 } else {

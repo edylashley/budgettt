@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -129,6 +130,7 @@ Route::get('/projects/recently-deleted', [ProjectController::class, 'recentlyDel
 Route::post('/projects/{id}/restore', [ProjectController::class, 'restore'])->middleware(['auth', 'admin'])->name('projects.restore');
 Route::delete('/projects/{id}/force-delete', [ProjectController::class, 'forceDelete'])->middleware(['auth', 'admin'])->name('projects.force-delete');
 Route::get('/projects/{project}/track-record', [ProjectController::class, 'trackRecord'])->middleware('auth')->name('projects.track-record');
+Route::get('/projects/{project}/monthly-assignments', [ProjectController::class, 'getMonthlyAssignments'])->middleware('auth')->name('projects.monthly-assignments');
 Route::get('/projects/{project}/receipt', [ProjectController::class, 'receipt'])->middleware('auth')->name('projects.receipt');
 Route::post('/projects/multiple-receipts', [ProjectController::class, 'multipleReceipts'])->middleware('auth')->name('projects.multiple-receipts');
 
@@ -144,6 +146,8 @@ Route::get('/monthly-assignments', [MonthlyAssignmentController::class, 'index']
 Route::post('/monthly-assignments/assign', [MonthlyAssignmentController::class, 'assign'])->middleware(['auth', 'admin'])->name('monthly-assignments.assign');
 Route::post('/monthly-assignments/set-team-head', [MonthlyAssignmentController::class, 'setTeamHead'])->middleware(['auth', 'admin'])->name('monthly-assignments.set-team-head');
 Route::post('/monthly-assignments/update-salary', [MonthlyAssignmentController::class, 'updateSalary'])->middleware(['auth', 'admin'])->name('monthly-assignments.update-salary');
+Route::post('/monthly-assignments/create-salary', [MonthlyAssignmentController::class, 'createSalaryAssignment'])->middleware(['auth', 'admin'])->name('monthly-assignments.create-salary');
+Route::post('/monthly-assignments/update-salary', [MonthlyAssignmentController::class, 'updateSalaryAssignment'])->middleware(['auth', 'admin'])->name('monthly-assignments.update-salary');
 Route::delete('/monthly-assignments/remove-engineer', [MonthlyAssignmentController::class, 'removeEngineer'])->middleware(['auth', 'admin'])->name('monthly-assignments.remove-engineer');
 Route::delete('/monthly-assignments/remove', [MonthlyAssignmentController::class, 'remove'])->middleware(['auth', 'admin'])->name('monthly-assignments.remove');
 
@@ -194,4 +198,3 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('system-settings', [SystemSettingsController::class, 'update'])->name('system-settings.update');
     Route::post('system-settings/clear-cache', [SystemSettingsController::class, 'clearCache'])->name('system-settings.clear-cache');
 });
-

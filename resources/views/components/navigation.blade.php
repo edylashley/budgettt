@@ -1,13 +1,16 @@
 <!-- Enhanced Sidebar Navigation Component -->
 <!-- Sidebar -->
-<div id="sidebar" class="fixed left-0 top-0 h-full w-64 z-50 transform transition-transform duration-300 ease-in-out flex flex-col" style="background: linear-gradient(180deg, #064e3b 0%, #065f46 50%, #10b981 100%);">
+<div id="sidebar" class="fixed left-0 top-0 h-full w-64 z-50 transform transition-transform duration-300 ease-in-out flex flex-col shadow-xl rounded-xl" style="background:rgb(10, 145, 100)">
     <!-- Logo/Brand Section -->
     <div class="p-4 border-b border-white/20">
-        <div class="flex items-center space-x-3">
-            <a href="/dashboard" class="hover:scale-105 transition-all duration-200 flex-shrink-0">
+        <div class="flex items-center space-x-3"
+            style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);"
+            >
+            <a href="javascript:void(0);" onclick="toggleSidebarByLogo()" class="hover:scale-105 transition-all duration-200 flex-shrink-0" title="Toggle Navigation">
                 @include('components.logo', ['size' => 'sm', 'background' => true])
             </a>
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0"
+                style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">
                 <a href="/dashboard" class="text-lg font-extrabold text-white drop-shadow tracking-wide hover:text-green-100 transition-colors duration-200 block truncate">Budget Control</a>
                 <p class="text-xs text-green-100 opacity-80 truncate">{{ $pageTitle ?? 'Project Management' }}</p>
             </div>
@@ -16,7 +19,8 @@
 
     <!-- Navigation Links -->
     <div class="flex-1 px-6 py-4 overflow-y-auto">
-        <nav class="space-y-3">
+        <nav class="space-y-3"
+            style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">
             <!-- Main Navigation Links -->
             <a href="/dashboard" class="sidebar-nav-item {{ request()->is('dashboard') ? 'active' : '' }}">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -59,7 +63,9 @@
     </div>
 
     <!-- User Account Section -->
-    <div class="border-t border-white/20 p-6 mt-auto">
+    <div class="border-t border-white/20 p-6 mt-auto"
+        style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);"
+        >
         <!-- User Info -->
         <div class="flex items-center mb-4">
             <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white font-semibold text-base mr-4">
@@ -135,15 +141,9 @@
     </svg>
 </button>
 
-
-
 <!-- Sidebar Overlay for Mobile -->
 <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
 
-<!-- Main Content Wrapper -->
-<div id="mainContent" class="transition-all duration-300 ease-in-out ml-0 md:ml-64">
-    <!-- This will be filled by the page content -->
-</div>
 
 <style>
 /* Sidebar Navigation Styles */
@@ -162,9 +162,13 @@
     border-radius: 0;
 }
 
+.sidebar-nav-item {
+    transition: transform 0.2s ease-in-out, background 0.2s, border-left 0.2s, padding-left 0.2s !important;
+}
+
 .sidebar-nav-item:hover {
     background: rgba(255, 255, 255, 0.15);
-    transform: translateX(0);
+    transform: translateY(-4px) !important;
     border-left: 4px solid rgba(255, 255, 255, 0.8);
     padding-left: 24px;
 }
@@ -275,9 +279,10 @@ body {
 .dropdown-item:hover {
     background: #f8fafc !important;
     background-color: #f8fafc !important;
-    transform: translateX(4px) !important;
+    transform: translateX(-4px) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
     color: #1f2937 !important;
+    transition: transform 0.2s ease-in-out, background 0.2s, box-shadow 0.2s, color 0.2s !important;
 }
 
 .dropdown-item:hover svg {
@@ -333,13 +338,23 @@ function toggleSidebar() {
         // Desktop behavior - toggle sidebar width
         const mainContent = document.getElementById('mainContent');
         if (sidebarOpen) {
-            sidebar.style.transform = 'translateX(-240px)';
-            if (mainContent) mainContent.style.marginLeft = '24px';
+            sidebar.style.transform = 'translateX(-256px)';
+            if (mainContent) mainContent.style.marginLeft = '0';
         } else {
             sidebar.style.transform = 'translateX(0)';
             if (mainContent) mainContent.style.marginLeft = '256px';
         }
         sidebarOpen = !sidebarOpen;
+    }
+}
+
+function toggleSidebarByLogo() {
+    // Only trigger on desktop
+    if (window.innerWidth >= 768) {
+        toggleSidebar();
+    } else {
+        // On mobile, clicking logo navigates to dashboard
+        window.location.href = '/dashboard';
     }
 }
 
@@ -401,7 +416,6 @@ document.addEventListener('keydown', function(event) {
 
 // Account Settings Functions
 function showMyProfile() {
-
     // Create and show account settings modal
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50';
@@ -435,10 +449,23 @@ function showMyProfile() {
         </div>
     `;
     document.body.appendChild(modal);
-}
+
+    // Keyboard shortcut to close modal
+    function closeModalOnEsc(event) {
+        if (event.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', closeModalOnEsc);
+        }
+    }
+    document.addEventListener('keydown', closeModalOnEsc);
+
+    // Also clean up event if closed by button
+    modal.querySelector('button').addEventListener('click', function() {
+        document.removeEventListener('keydown', closeModalOnEsc);
+    });
+} 
 
 function showChangePassword() {
-
     // Create and show change password modal
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50';
@@ -462,11 +489,17 @@ function showChangePassword() {
                     <input type="password" name="new_password_confirmation" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-green-500" required>
                 </div>
                 <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" onclick="this.closest('.fixed').remove()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                    <button type="button" id="cancelBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
-                        Update Password
+                    <button type="submit" id="submitBtn" class="relative bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-lg font-semibold transition-colors flex items-center justify-center min-w-[120px]">
+                        <span id="submitText">Update Password</span>
+                        <span id="submitSpinner" class="hidden ml-2">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
                     </button>
                 </div>
             </form>
@@ -474,29 +507,102 @@ function showChangePassword() {
     `;
     document.body.appendChild(modal);
 
+    // Keyboard shortcut to close modal
+    function closeModalOnEsc(event) {
+        if (event.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', closeModalOnEsc);
+        }
+    }
+    document.addEventListener('keydown', closeModalOnEsc);
+
+    // Also clean up event if closed by button
+    modal.querySelector('button').addEventListener('click', function() {
+        document.removeEventListener('keydown', closeModalOnEsc);
+    });
+
+    // Reusable toast notification function
+    function showToast(message, type = 'info', duration = 5000) {
+        const toast = document.createElement('div');
+        const isSuccess = type === 'success';
+        
+        toast.className = `fixed top-6 right-6 z-50 ${isSuccess ? 'bg-green-600' : 'bg-red-600'} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3 animate-fadeInUp`;
+        
+        toast.innerHTML = `
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                ${isSuccess 
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>'
+                }
+            </svg>
+            <span class="font-semibold">${isSuccess ? 'Success!' : 'Error'}</span>
+            <span>${message}</span>
+            <button onclick="this.parentElement.remove()" class="ml-3 text-white hover:opacity-75 focus:outline-none">&times;</button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto-remove after duration
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.classList.add('opacity-0', 'translate-x-8', 'transition-all', 'duration-300');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, duration);
+        
+        return toast;
+    }
+
     // Handle form submission
     document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const formData = new FormData(this);
-
+        
+        const form = this;
+        const submitBtn = form.querySelector('#submitBtn');
+        const submitText = form.querySelector('#submitText');
+        const submitSpinner = form.querySelector('#submitSpinner');
+        const cancelBtn = form.querySelector('#cancelBtn');
+        const formData = new FormData(form);
+        
+        // Disable form and show loading state
+        form.querySelectorAll('input, button').forEach(el => el.disabled = true);
+        submitText.textContent = 'Updating...';
+        submitSpinner.classList.remove('hidden');
+        
         try {
             const response = await fetch('/change-password', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: formData
+                body: formData,
+                // Add timeout to prevent hanging
+                signal: AbortSignal.timeout(30000) // 30 seconds timeout
             });
 
+            const result = await response.json();
+            
             if (response.ok) {
-                alert('Password changed successfully!');
-                modal.remove();
+                showToast('Password changed successfully!', 'success');
+                // Small delay to show success message before closing
+                setTimeout(() => modal.remove(), 1000);
             } else {
-                const error = await response.json();
-                alert(error.message || 'Error changing password');
+                showToast(result.message || 'Error changing password', 'error');
+                // Re-enable form on error
+                form.querySelectorAll('input, button').forEach(el => el.disabled = false);
+                submitText.textContent = 'Update Password';
+                submitSpinner.classList.add('hidden');
             }
         } catch (error) {
-            alert('Error changing password. Please try again.');
+            const errorMsg = error.name === 'TimeoutError' 
+                ? 'Request timed out. Please try again.'
+                : 'Error changing password. Please try again.';
+                
+            showToast(errorMsg, 'error');
+            // Re-enable form on error
+            form.querySelectorAll('input, button').forEach(el => el.disabled = false);
+            submitText.textContent = 'Update Password';
+            submitSpinner.classList.add('hidden');
         }
     });
 }
@@ -689,4 +795,3 @@ function saveSystemSettings() {
     }
 }
 </script>
-

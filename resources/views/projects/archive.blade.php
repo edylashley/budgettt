@@ -173,7 +173,7 @@
         }
     </style>
 </head>
-<body style="background: #064e3b;" class="min-h-screen">
+<body style="background: #064e3b;;" class="min-h-screen">
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'Project Archive'])
 
