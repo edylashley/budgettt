@@ -156,10 +156,15 @@ class Project extends Model
         return ($this->totalSpentWithDetailedEngineering() / $this->budget) * 100;
     }
 
-    // Calculate total detailed engineering cost (sum of all engineer salaries)
+    // Calculate total detailed engineering cost (sum of current month's engineer salaries)
     public function getDetailedEngineeringCost()
     {
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
+        
         return $this->monthlyAssignments()
+            ->where('year', $currentYear)
+            ->where('month', $currentMonth)
             ->whereNotNull('salary')
             ->sum('salary');
     }

@@ -287,16 +287,46 @@ class ExpenseController extends Controller
     {
         Log::info('Delete expense request received', [
             'user_id' => Auth::id(),
-            'expense_id' => $expense->id
+            'expense_id' => $expense->id,
+            'description' => $expense->description
         ]);
 
         // Get project before deletion for updating summary
         $project = $expense->project;
         
+        // Check if this is a Detailed Engineering expense
+        $isDetailedEngineering = $expense->description === 'Detailed Engineering';
+        
+        // Delete the expense
         $expense->delete();
+        
+        // If this was a Detailed Engineering expense, also remove team assignments
+        if ($isDetailedEngineering && $project) {
+            Log::info('Deleting team assignments for Detailed Engineering expense', [
+                'project_id' => $project->id,
+                'expense_id' => $expense->id
+            ]);
+            
+            // Get the current month and year
+            $currentYear = now()->year;
+            $currentMonth = now()->month;
+            
+            // Delete all monthly assignments for this project in the current month
+            $deleted = \App\Models\MonthlyAssignment::where('project_id', $project->id)
+                ->where('year', $currentYear)
+                ->where('month', $currentMonth)
+                ->delete();
+                
+            Log::info('Deleted team assignments for Detailed Engineering expense', [
+                'project_id' => $project->id,
+                'deleted_count' => $deleted
+            ]);
+        }
 
         Log::info('Expense deleted successfully', [
-            'expense_id' => $expense->id
+            'expense_id' => $expense->id,
+            'was_detailed_engineering' => $isDetailedEngineering,
+            'team_assignments_deleted' => $isDetailedEngineering ? $deleted ?? 0 : 0
         ]);
 
         // Get all non-archived projects for summary data
@@ -329,5 +359,51 @@ class ExpenseController extends Controller
                 ]
             ]
         ]);
+    }
+
+    // Add this method to handle multiple expenses at once
+    public function storeMultiple(Request $request)
+    {
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'expenses' => 'required|array|min:1',
+            'expenses.*.description' => 'required|string|max:255',
+            'expenses.*.amount' => 'required|numeric|min:0.01',
+        ]);
+
+        $project = Project::findOrFail($request->project_id);
+        $totalAmount = collect($request->expenses)->sum('amount');
+        
+        // Check budget constraint
+        $currentSpent = $project->totalSpent();
+        $newTotal = $currentSpent + $totalAmount;
+
+        if ($newTotal > $project->budget) {
+            return response()->json([
+                'error' => 'These expenses would exceed the project budget.',
+                'details' => [
+                    'project_budget' => $project->budget,
+                    'current_spent' => $currentSpent,
+                    'remaining_budget' => $project->budget - $currentSpent,
+                    'requested_amount' => $totalAmount,
+                    'would_exceed_by' => $newTotal - $project->budget
+                ]
+            ], 422);
+        }
+
+        $createdExpenses = [];
+        foreach ($request->expenses as $expenseData) {
+            $createdExpenses[] = Expense::create([
+                'project_id' => $request->project_id,
+                'description' => $expenseData['description'],
+                'amount' => $expenseData['amount'],
+                'date' => now(),
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Expenses created successfully',
+            'expenses' => $createdExpenses
+        ], 201);
     }
 }

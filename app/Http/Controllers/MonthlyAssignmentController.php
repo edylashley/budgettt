@@ -258,6 +258,7 @@ class MonthlyAssignmentController extends Controller
             return response()->json(['success' => false, 'message' => 'Error updating salary']);
         }
     }
+    
 
     // Create salary and team assignment from expense modal
     public function createSalaryAssignment(Request $request)

@@ -308,10 +308,21 @@ class ProjectController extends Controller
 
     public function trackRecord(Project $project)
     {
+        $isRefresh = request()->has('refresh');
+        
         $expenses = $project->expenses()->orderBy('date', 'desc')->get();
 
         // Get detailed engineering cost
         $detailedEngineeringCost = $project->getDetailedEngineeringCost();
+        
+        Log::info('Track record requested', [
+            'project_id' => $project->id,
+            'project_name' => $project->name,
+            'is_refresh' => $isRefresh,
+            'detailed_engineering_cost' => $detailedEngineeringCost,
+            'total_spent_with_engineering' => $project->totalSpentWithDetailedEngineering(),
+            'remaining_budget' => $project->remainingBudgetWithDetailedEngineering()
+        ]);
 
         // Create a virtual "Detailed Engineering" expense if there are engineer salaries
         $allExpenses = $expenses->toArray();
@@ -375,6 +386,225 @@ class ProjectController extends Controller
             'project_engineer_id' => $project->project_engineer_id,
             'monthly_assignments' => $monthlyAssignments
         ]);
+    }
+
+    public function updateMonthlyAssignments(Request $request, Project $project)
+    {
+        Log::info('Update monthly assignments request received', [
+            'user_id' => Auth::id(),
+            'project_id' => $project->id,
+            'project_name' => $project->name,
+            'request_data' => $request->all()
+        ]);
+
+        $request->validate([
+            'team_members' => 'required|array',
+            'team_members.*.engineer_id' => 'required|exists:engineers,id',
+            'team_members.*.salary' => 'required|numeric|min:0',
+            'team_members.*.role' => 'required|in:member,head',
+            'team_members.*.is_team_head' => 'required|boolean'
+        ]);
+
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
+
+        try {
+            DB::beginTransaction();
+
+            // Update existing assignments
+            foreach ($request->team_members as $member) {
+                $assignment = $project->monthlyAssignments()
+                    ->where('engineer_id', $member['engineer_id'])
+                    ->where('year', $currentYear)
+                    ->where('month', $currentMonth)
+                    ->first();
+
+                if ($assignment) {
+                    $oldSalary = $assignment->salary;
+                    $assignment->update([
+                        'salary' => $member['salary'],
+                        'is_team_head' => $member['is_team_head']
+                    ]);
+                    
+                    Log::info('Updated monthly assignment', [
+                        'project_id' => $project->id,
+                        'engineer_id' => $member['engineer_id'],
+                        'old_salary' => $oldSalary,
+                        'new_salary' => $member['salary'],
+                        'is_team_head' => $member['is_team_head']
+                    ]);
+                } else {
+                    Log::warning('Monthly assignment not found for update', [
+                        'project_id' => $project->id,
+                        'engineer_id' => $member['engineer_id'],
+                        'year' => $currentYear,
+                        'month' => $currentMonth
+                    ]);
+                }
+            }
+
+            // Ensure only one team head exists
+            $teamHeads = $project->monthlyAssignments()
+                ->where('year', $currentYear)
+                ->where('month', $currentMonth)
+                ->where('is_team_head', true)
+                ->get();
+
+            if ($teamHeads->count() > 1) {
+                // Keep only the first team head, remove others
+                $firstTeamHead = $teamHeads->first();
+                $project->monthlyAssignments()
+                    ->where('year', $currentYear)
+                    ->where('month', $currentMonth)
+                    ->where('is_team_head', true)
+                    ->where('id', '!=', $firstTeamHead->id)
+                    ->update(['is_team_head' => false]);
+            }
+
+            DB::commit();
+
+            // Log the updated totals after the transaction
+            $updatedDetailedEngineeringCost = $project->getDetailedEngineeringCost();
+            $updatedTotalSpent = $project->totalSpentWithDetailedEngineering();
+            $updatedRemainingBudget = $project->remainingBudgetWithDetailedEngineering();
+
+            Log::info('Monthly assignments updated successfully', [
+                'project_id' => $project->id,
+                'project_name' => $project->name,
+                'user_id' => Auth::id(),
+                'updated_members' => count($request->team_members),
+                'updated_detailed_engineering_cost' => $updatedDetailedEngineeringCost,
+                'updated_total_spent' => $updatedTotalSpent,
+                'updated_remaining_budget' => $updatedRemainingBudget
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Team salaries updated successfully',
+                'project_id' => $project->id
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error updating monthly assignments', [
+                'project_id' => $project->id,
+                'project_name' => $project->name,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update team salaries: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function debugEngineeringCost(Project $project)
+    {
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
+        
+        $monthlyAssignments = $project->monthlyAssignments()
+            ->where('year', $currentYear)
+            ->where('month', $currentMonth)
+            ->with('engineer')
+            ->get();
+            
+        $detailedEngineeringCost = $project->getDetailedEngineeringCost();
+        $totalSpent = $project->totalSpent();
+        $totalSpentWithEngineering = $project->totalSpentWithDetailedEngineering();
+        $remainingBudget = $project->remainingBudgetWithDetailedEngineering();
+        
+        return response()->json([
+            'project_id' => $project->id,
+            'project_name' => $project->name,
+            'current_year' => $currentYear,
+            'current_month' => $currentMonth,
+            'monthly_assignments' => $monthlyAssignments->map(function($assignment) {
+                return [
+                    'engineer_id' => $assignment->engineer_id,
+                    'engineer_name' => $assignment->engineer->name,
+                    'salary' => $assignment->salary,
+                    'is_team_head' => $assignment->is_team_head,
+                    'year' => $assignment->year,
+                    'month' => $assignment->month
+                ];
+            }),
+            'detailed_engineering_cost' => $detailedEngineeringCost,
+            'total_spent' => $totalSpent,
+            'total_spent_with_engineering' => $totalSpentWithEngineering,
+            'remaining_budget' => $remainingBudget,
+            'budget' => $project->budget
+        ]);
+    }
+
+    public function removeEngineer(Project $project, Engineer $engineer)
+    {
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
+        
+        Log::info('Remove engineer request received', [
+            'user_id' => Auth::id(),
+            'project_id' => $project->id,
+            'project_name' => $project->name,
+            'engineer_id' => $engineer->id,
+            'engineer_name' => $engineer->name
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
+            // Remove the monthly assignment for this engineer
+            $deleted = $project->monthlyAssignments()
+                ->where('engineer_id', $engineer->id)
+                ->where('year', $currentYear)
+                ->where('month', $currentMonth)
+                ->delete();
+                
+            if ($deleted > 0) {
+                Log::info('Engineer removed successfully', [
+                    'project_id' => $project->id,
+                    'engineer_id' => $engineer->id,
+                    'deleted_assignments' => $deleted
+                ]);
+                
+                DB::commit();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Engineer removed successfully'
+                ]);
+            } else {
+                Log::warning('No monthly assignment found to delete', [
+                    'project_id' => $project->id,
+                    'engineer_id' => $engineer->id,
+                    'year' => $currentYear,
+                    'month' => $currentMonth
+                ]);
+                
+                DB::rollBack();
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Engineer not found in current month assignments'
+                ], 404);
+            }
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error removing engineer', [
+                'project_id' => $project->id,
+                'engineer_id' => $engineer->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove engineer: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function receipt(Project $project)

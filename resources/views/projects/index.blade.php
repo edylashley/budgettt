@@ -470,14 +470,6 @@ body {
                     @if(auth()->user()->is_admin)
                         <!-- Action Buttons - Admin Only -->
                         <div class="flex justify-center space-x-2 pt-4 border-t border-white border-opacity-20">
-                            <button class="edit-project-btn bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl min-w-[80px] justify-center border border-emerald-600 ease-in-out transform hover:-translate-y-1"
-                                    data-project-id="{{ $project->id }}"
-                                    data-project-name="{{ $project->name }}"
-                                    data-project-budget="{{ $project->budget }}"
-                                    data-project-fpp-code="{{ $project->fpp_code ?? '' }}"
-                                    data-project-engineer-id="{{ $project->project_engineer_id ?? '' }}">
-                                <span>Edit</span>
-                            </button>
                             <button class="archive-project-btn bg-amber-700 hover:bg-amber-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl min-w-[80px] justify-center border border-amber-600 ease-in-out transform hover:-translate-y-1"
                                     data-project-id="{{ $project->id }}"
                                     data-project-name="{{ $project->name }}">
@@ -685,80 +677,65 @@ body {
 
     <!-- Edit Salaries Modal -->
     <div id="editSalariesModal" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40 hidden transition">
-        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl relative animate-fadeInUp max-h-[85vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-3xl relative animate-fadeInUp max-h-[90vh] overflow-y-auto">
             <button id="closeEditSalariesModal" class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-3xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200">&times;</button>
             <h2 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
-                <span class="mr-2">👥</span> Edit Team & Salaries
+                <span class="mr-2">👥</span> Current Engineering Team
             </h2>
-            <div id="editSalariesProjectInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div id="editSalariesProjectInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div class="flex justify-between items-center">
+                    <div>
                 <div class="text-sm text-blue-600 font-medium">Project:</div>
-                <div id="editSalariesProjectName" class="font-bold text-blue-800"></div>
+                        <div id="editSalariesProjectName" class="font-bold text-blue-800 text-lg"></div>
             </div>
-            <form id="editSalariesForm" class="space-y-4">
-                <input type="hidden" id="editSalariesProjectId" name="project_id">
-                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                
-                <!-- Project Engineer Section -->
-                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                    <div class="flex items-center mb-2">
-                        <span class="text-lg mr-2">👨‍💼</span>
-                        <label for="editProjectEngineer" class="block text-gray-700 font-semibold">Project Engineer</label>
+                    <div class="text-right">
+                        <div class="text-sm text-blue-600 font-medium">Period:</div>
+                        <div id="editSalariesPeriod" class="font-medium text-blue-700"></div>
                     </div>
-                    <select id="editProjectEngineer" name="project_engineer_id" class="w-full rounded-lg px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200" required>
-                        <option value="">Select Project Engineer</option>
-                        @foreach(\App\Models\Engineer::where('is_active', true)->get() as $engineer)
-                            <option value="{{ $engineer->id }}">{{ $engineer->name }}</option>
-                        @endforeach
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">The project engineer will oversee the entire project</p>
                 </div>
-                
-                <!-- Current Team Members Section -->
-                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                    <div class="flex items-center mb-2">
-                        <span class="text-lg mr-2">👥</span>
-                        <label class="block text-gray-700 font-semibold">Current Team Members</label>
                     </div>
-                    <p class="text-xs text-gray-600 mb-3">Edit team members, assign team head, and adjust individual salaries.</p>
                     
-                    <div id="editTeamMembersContainer" class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-white">
+            <!-- Team Display Section -->
+            <div id="teamDisplayContainer" class="space-y-4">
                         <!-- Will be populated by JavaScript -->
-                    </div>
-                    
-                    <!-- Team Summary -->
-                    <div id="editTeamSummary" class="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg hidden">
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="font-medium text-blue-800">Team Head:</span>
-                            <span id="editTeamHeadName" class="text-blue-600 font-semibold">-</span>
-                        </div>
-                        <div class="flex justify-between items-center text-xs mt-1">
-                            <span class="font-medium text-blue-800">Team Members:</span>
-                            <span id="editTeamMembersCount" class="text-blue-600 font-semibold">0</span>
-                        </div>
-                        <div class="flex justify-between items-center text-xs mt-1">
-                            <span class="font-medium text-blue-800">Total Salary:</span>
-                            <span id="editTotalSalaryDisplay" class="text-blue-600 font-semibold">₱0.00</span>
-                        </div>
+                <div class="text-center py-8 text-gray-400">
+                    <div class="text-4xl mb-2">👷</div>
+                    <p>Loading team information...</p>
                     </div>
                 </div>
                 
-                <div class="flex justify-between items-center pt-3 border-t border-gray-200">
-                    <button type="button" onclick="if(window.initializeEditSalariesUX) window.initializeEditSalariesUX();" 
-                            class="px-3 py-1 rounded-lg border border-orange-500 text-orange-700 hover:bg-orange-50 font-medium transition-all duration-200 bg-orange-100 text-xs">
-                        🔧 Debug: Re-init UX
-                    </button>
+            <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-500">
+                    Last updated: <span id="lastUpdatedTime">Just now</span>
+                </div>
                     <div class="flex space-x-3">
-                        <button type="button" id="cancelEditSalariesBtn" 
-                                class="px-4 py-2 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100 text-sm">
-                            Cancel
-                        </button>
-                        <button type="submit" 
-                                class="bg-blue-600 hover:bg-blue-800 px-4 py-2 rounded-lg font-bold text-white border-2 border-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 text-sm">
-                            <span id="submitEditSalariesText">Update Team & Salaries</span>
+                                         <button type="button" id="refreshTeamBtn" 
+                             class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 font-medium transition-all duration-200 flex items-center space-x-2">
+                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                         </svg>
+                         <span>Refresh</span>
+                     </button>
+                     <button type="button" id="testRefreshBtn" 
+                             class="px-4 py-2 rounded-lg border border-orange-300 text-orange-700 hover:bg-orange-100 font-medium transition-all duration-200 flex items-center space-x-2">
+                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                         </svg>
+                         <span>Test Refresh</span>
+                     </button>
+                     <button id="debugCostBtn" 
+                             class="px-4 py-2 rounded-lg border border-red-300 text-red-700 hover:bg-red-100 font-medium transition-all duration-200 flex items-center space-x-2">
+                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                         </svg>
+                         <span>Debug Cost</span>
+                     </button>
+                    <button type="button" id="closeEditSalariesBtn" 
+                            class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200">
+                        Close
                         </button>
                     </div>
                 </div>
-            </form>
         </div>
     </div>
 
@@ -859,6 +836,7 @@ body {
                         <button id="showReceiptsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200">
                             View Receipts
                         </button>
+                        
                     </div>
                 </div>
             </div>
@@ -1471,6 +1449,7 @@ body {
             const teamHeadName = document.getElementById('teamHeadName');
             const teamMembersCount = document.getElementById('teamMembersCount');
             const totalSalaryDisplay = document.getElementById('totalSalaryDisplay');
+            const projectEngineerSelect = document.getElementById('projectEngineer');
             
             console.log('Found elements:', {
                 teamMemberCheckboxes: teamMemberCheckboxes.length,
@@ -1636,6 +1615,46 @@ body {
                 return isValid;
             }
 
+            
+            // Handle project engineer change
+            if (projectEngineerSelect) {
+                projectEngineerSelect.addEventListener('change', function() {
+                    const selectedEngineerId = this.value;
+                    
+                    // Reset all team member checkboxes, radios, and inputs
+                    teamMemberCheckboxes.forEach(checkbox => {
+                        const engineerId = checkbox.value;
+                        const teamHeadRadio = document.getElementById(`team_head_${engineerId}`);
+                        const salaryInput = document.querySelector(`input[name="individual_salaries[${engineerId}]"]`);
+                        const teamMemberItem = checkbox.closest('.team-member-item');
+                        
+                        if (engineerId === selectedEngineerId) {
+                            // Disable and uncheck the project engineer
+                            checkbox.disabled = true;
+                            checkbox.checked = false;
+                            teamHeadRadio.disabled = true;
+                            teamHeadRadio.checked = false;
+                            salaryInput.disabled = true;
+                            salaryInput.value = '';
+                            teamMemberItem.classList.add('opacity-50', 'cursor-not-allowed');
+                        } else {
+                            // Re-enable other engineers if they were previously disabled
+                            if (checkbox.disabled) {
+                                checkbox.disabled = false;
+                                teamMemberItem.classList.remove('opacity-50', 'cursor-not-allowed');
+                            }
+                        }
+                    });
+                    
+                    updateTeamSummary();
+                });
+                
+                // Trigger change event in case a project engineer is pre-selected
+                if (projectEngineerSelect.value) {
+                    projectEngineerSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
             // Initialize validation
             validateSalaryForm();
         };
@@ -1692,12 +1711,44 @@ body {
             }
         });
 
+        // Format date as Month Year (e.g., "August 2023")
+        function formatMonthYear(dateString) {
+            if (!dateString) return 'Current Month';
+            const date = new Date(dateString);
+            return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+
+        // Format a date string to a readable format
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            if (amount === null || amount === undefined) return '₱0.00';
+            return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+        }
+
         // Edit Salaries Modal Functionality
         window.openEditSalariesModal = function(projectId) {
             console.log('Opening edit salaries modal for project:', projectId);
             
-            // Set project ID
-            document.getElementById('editSalariesProjectId').value = projectId;
+            // Set loading state
+            const teamContainer = document.getElementById('teamDisplayContainer');
+            teamContainer.innerHTML = `
+                <div class="text-center py-8 text-gray-400">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p>Loading team information...</p>
+                </div>
+            `;
+            
+            // Set current time
+            document.getElementById('lastUpdatedTime').textContent = 'Just now';
+            
+            // Open modal immediately for better UX
+            ModalManager.openModal('editSalariesModal');
             
             // Fetch current team data
             fetch(`/projects/${projectId}/monthly-assignments`)
@@ -1708,28 +1759,312 @@ body {
                     // Set project name
                     document.getElementById('editSalariesProjectName').textContent = data.project_name || 'Unknown Project';
                     
-                    // Set project engineer
-                    const projectEngineerSelect = document.getElementById('editProjectEngineer');
-                    projectEngineerSelect.value = data.project_engineer_id || '';
+                    // Set period
+                    const periodElement = document.getElementById('editSalariesPeriod');
+                    periodElement.textContent = formatMonthYear(data.period) || 'Current Month';
                     
-                    // Populate team members
-                    populateEditTeamMembers(data.monthly_assignments || []);
+                    // Render team members
+                    renderTeamMembers(data.monthly_assignments || []);
                     
-                    // Open modal
-                    ModalManager.openModal('editSalariesModal');
+                                         // Set up refresh button
+                     const refreshBtn = document.getElementById('refreshTeamBtn');
+                     if (refreshBtn) {
+                         refreshBtn.onclick = function() {
+                             openEditSalariesModal(projectId);
+                         };
+                     }
+                     
+                     // Set up test refresh button
+                     const testRefreshBtn = document.getElementById('testRefreshBtn');
+                     if (testRefreshBtn) {
+                         testRefreshBtn.onclick = function() {
+                             console.log('Test refresh button clicked');
+                             const currentSelectedProjects = window.currentSelectedProjects || [];
+                             if (currentSelectedProjects.length > 0) {
+                                 console.log('Test refreshing with projects:', currentSelectedProjects);
+                                 openMultipleTrackRecordModal(currentSelectedProjects);
+                             } else {
+                                 console.log('No projects to refresh');
+                             }
+                         };
+                     }
+                     
+                     // Set up debug cost button
+                     const debugCostBtn = document.getElementById('debugCostBtn');
+                     if (debugCostBtn) {
+                         debugCostBtn.onclick = function() {
+                             console.log('Debug cost button clicked');
+                             const currentSelectedProjects = window.currentSelectedProjects || [];
+                             if (currentSelectedProjects.length > 0) {
+                                 const projectId = currentSelectedProjects[0].id;
+                                 console.log('Debugging cost for project:', projectId);
+                                 fetch(`/projects/${projectId}/debug-engineering-cost`)
+                                     .then(response => response.json())
+                                     .then(data => {
+                                         console.log('Debug cost data:', data);
+                                         alert(`Debug Cost Data:\n\nProject: ${data.project_name}\nDetailed Engineering Cost: ₱${data.detailed_engineering_cost}\nTotal Spent: ₱${data.total_spent}\nTotal with Engineering: ₱${data.total_spent_with_engineering}\nRemaining Budget: ₱${data.remaining_budget}\n\nMonthly Assignments: ${data.monthly_assignments.length} engineers`);
+                                     })
+                                     .catch(error => {
+                                         console.error('Error fetching debug data:', error);
+                                         alert('Error fetching debug data');
+                                     });
+                             } else {
+                                 console.log('No projects to debug');
+                             }
+                         };
+                     }
                     
-                    // Initialize UX
-                    setTimeout(() => {
-                        if (window.initializeEditSalariesUX) {
-                            window.initializeEditSalariesUX();
-                        }
-                    }, 200);
+                    // Set up close button
+                    const closeBtn = document.getElementById('closeEditSalariesBtn');
+                    if (closeBtn) {
+                        closeBtn.onclick = function() {
+                            ModalManager.closeModal('editSalariesModal');
+                        };
+                    }
                 })
                 .catch(error => {
                     console.error('Error fetching team data:', error);
-                    showCenteredNotification('Error loading team data. Please try again.', 'error', 1000);
+                    teamContainer.innerHTML = `
+                        <div class="text-center py-8 text-red-500">
+                            <div class="text-4xl mb-2">⚠️</div>
+                            <p>Failed to load team information.</p>
+                            <button onclick="openEditSalariesModal(${projectId})" 
+                                    class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                Try Again
+                            </button>
+                        </div>
+                    `;
                 });
         };
+        
+        // Render detailed engineering team in the modal
+        function renderDetailedEngineeringTeam(assignments) {
+            const container = document.getElementById('engineeringTeamList');
+            
+            if (!assignments || assignments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <div class="text-4xl mb-2">👥</div>
+                        <p>No team members assigned to this project yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group assignments by role
+            const teamHead = assignments.find(a => a.is_team_head);
+            const projectEngineer = assignments.find(a => a.is_project_engineer);
+            const teamMembers = assignments.filter(a => !a.is_team_head && !a.is_project_engineer);
+            
+            let html = '';
+            
+            // Project Engineer Section
+            if (projectEngineer) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                            Project Engineer
+                        </h3>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-green-800">${projectEngineer.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-green-600 mt-1">${projectEngineer.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-green-500 mt-1">Assigned: ${formatDate(projectEngineer.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-green-700">Salary</div>
+                                    <div class="text-lg font-bold text-green-800">${formatCurrency(projectEngineer.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Team Head Section
+            if (teamHead) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            Team Head
+                        </h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-blue-800">${teamHead.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-blue-600 mt-1">${teamHead.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-blue-500 mt-1">Assigned: ${formatDate(teamHead.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-blue-700">Salary</div>
+                                    <div class="text-lg font-bold text-blue-800">${formatCurrency(teamHead.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Team Members Section
+            if (teamMembers.length > 0) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                            Team Members (${teamMembers.length})
+                        </h3>
+                        <div class="space-y-3">
+                `;
+                
+                teamMembers.forEach(member => {
+                    html += `
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-purple-800">${member.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-purple-600 mt-1">${member.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-purple-500 mt-1">Assigned: ${formatDate(member.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-purple-700">Salary</div>
+                                    <div class="text-lg font-bold text-purple-800">${formatCurrency(member.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Total Salary
+            const totalSalary = assignments.reduce((sum, member) => sum + (parseFloat(member.salary) || 0), 0);
+            html += `
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Total Monthly Salary:</span>
+                        <span class="text-xl font-bold text-blue-700">${formatCurrency(totalSalary)}</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-sm text-gray-500">
+                    <p class="flex items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        <span>Project Engineer</span>
+                    </p>
+                    <p class="flex items-center mt-1">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                        <span>Team Head</span>
+                    </p>
+                    <p class="flex items-center mt-1">
+                        <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                        <span>Team Member</span>
+                    </p>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Render team members in the modal
+        function renderTeamMembers(assignments) {
+            const container = document.getElementById('teamDisplayContainer');
+            
+            if (!assignments || assignments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <div class="text-4xl mb-2">👥</div>
+                        <p>No team members assigned to this project yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Separate team head and members
+            const teamHead = assignments.find(a => a.is_team_head);
+            const teamMembers = assignments.filter(a => !a.is_team_head);
+            
+            let html = '';
+            
+            // Team Head Section
+            if (teamHead) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            Team Head
+                        </h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-blue-800">${teamHead.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-blue-600 mt-1">${teamHead.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-blue-500 mt-1">Assigned: ${formatDate(teamHead.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-blue-700">Salary</div>
+                                    <div class="text-lg font-bold text-blue-800">${formatCurrency(teamHead.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Team Members Section
+            if (teamMembers.length > 0) {
+                html += `
+                    <div>
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                            Team Members (${teamMembers.length})
+                        </h3>
+                        <div class="space-y-3">
+                `;
+                
+                teamMembers.forEach(member => {
+                    html += `
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-green-800">${member.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-green-600 mt-1">${member.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-green-500 mt-1">Assigned: ${formatDate(member.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-green-700">Salary</div>
+                                    <div class="text-lg font-bold text-green-800">${formatCurrency(member.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Total Salary
+            const totalSalary = assignments.reduce((sum, member) => sum + (parseFloat(member.salary) || 0), 0);
+            html += `
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Total Monthly Salary:</span>
+                        <span class="text-xl font-bold text-blue-700">${formatCurrency(totalSalary)}</span>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
 
         // Populate edit team members
         function populateEditTeamMembers(assignments) {
@@ -2404,7 +2739,7 @@ body {
                 } finally {
                     // Reset button state
                     deleteSelectedBtn.disabled = false;
-                    deleteSelectedBtn.innerHTML = `🗑️Delete Selected (<span id="deleteSelectedCount">${selectedProjects.length}</span>)`;
+                    deleteSelectedBtn.innerHTML = `Delete Selected (<span id="deleteSelectedCount">${selectedProjects.length}</span>)`;
                 }
             }
         });
@@ -2478,6 +2813,10 @@ body {
 
         // Open multiple projects track record modal
         async function openMultipleTrackRecordModal(selectedProjects) {
+            console.log('openMultipleTrackRecordModal called with:', selectedProjects);
+            
+            // Store selected projects globally for refresh purposes
+            window.currentSelectedProjects = selectedProjects;
             try {
                 // Update modal title
                 const projectNames = selectedProjects.length === 1
@@ -2502,8 +2841,10 @@ body {
                 // Fetch data for all selected projects
                 const projectsData = await Promise.all(
                     selectedProjects.map(async (project) => {
-                        const response = await fetch(`/projects/${project.id}/track-record`);
+                        console.log(`Fetching track record for project: ${project.name} (ID: ${project.id})`);
+                        const response = await fetch(`/projects/${project.id}/track-record?t=${Date.now()}&refresh=true`);
                         const data = await response.json();
+                        console.log(`Track record data for ${project.name}:`, data);
                         return { ...data, projectName: project.name };
                     })
                 );
@@ -2581,7 +2922,7 @@ body {
                                                             ${isVirtual ?
                                                                 (isUserAdmin ? `
                                                                     <button 
-                                                                        onclick="openEditSalariesModal(${project.id})"
+                                                                        onclick="openEditDetailedEngineeringModal(${project.id}, '${project.name.replace(/'/g, "\\'").replace(/"/g, '\\"')}')"
                                                                         class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md mr-2 font-medium text-xs transition-colors duration-150"
                                                                     >
                                                                         Edit
@@ -2597,6 +2938,8 @@ body {
     data-project-id="${project.id}">
     Edit
 </button>
+
+                                                                    
 <button class="delete-expense-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md font-medium text-xs transition-colors duration-150"
     data-expense-id="${expense.id}"
     data-description="${escapedDescription}">
@@ -2653,6 +2996,28 @@ setTimeout(() => {
 // Ensure editExpense is globally available
 window.editExpense = function(expenseId, description, amount, date, projectId) {
     console.log('Setting up edit form with date:', date);
+    
+    // Check if this is a Detailed Engineering expense
+    if (description === 'Detailed Engineering') {
+        console.log('Detailed Engineering expense detected, opening team modal');
+        console.log('Project ID:', projectId);
+        
+        // Find the project name from the current track record data
+        let projectName = 'Unknown Project';
+        const projectCard = document.querySelector('.bg-gradient-to-r.from-blue-100.to-indigo-100 h3');
+        if (projectCard) {
+            projectName = projectCard.textContent.trim();
+            console.log('Found project name:', projectName);
+        } else {
+            console.log('Could not find project card, using default name');
+        }
+        
+        // Open the detailed engineering modal instead
+        openEditDetailedEngineeringModal(projectId, projectName);
+        return;
+    }
+    
+    // Regular expense editing
     document.getElementById('editExpenseId').value = expenseId;
     document.getElementById('editExpenseDescription').value = description;
     document.getElementById('editExpenseAmount').value = amount;
@@ -2703,7 +3068,7 @@ if (editExpenseForm) {
     });
 }
 
-                // Setup print and receipt buttons
+                                 // Setup action buttons
                 const printAllBtn = document.getElementById('printAllBtn');
                 const showReceiptsBtn = document.getElementById('showReceiptsBtn');
 
@@ -2712,8 +3077,11 @@ if (editExpenseForm) {
                 };
 
                 showReceiptsBtn.onclick = function() {
-                    viewAllReceipts(currentSelectedProjects);
+                    openReceiptModal(null, true, currentSelectedProjects.map(p => p.id));
                 };
+
+                
+                
 
             } catch (error) {
                 console.error('Error loading track records:', error);
@@ -3854,7 +4222,360 @@ if (editExpenseForm) {
             }
         });
         
-        // Initialize expense form handling
+        // Render detailed engineering team in the modal
+        function renderDetailedEngineeringTeam(assignments) {
+            const teamList = document.getElementById('engineeringTeamList');
+            const template = document.getElementById('teamMemberTemplate');
+            const projectEngineerId = document.querySelector('#editDetailedEngineeringModal').getAttribute('data-project-engineer-id');
+            
+            if (!assignments || assignments.length === 0) {
+                teamList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-users-slash text-3xl mb-2"></i>
+                        <p>No engineers assigned to this project yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Clear the list
+            teamList.innerHTML = '';
+            
+            // Add each team member
+            assignments.forEach(assignment => {
+                const clone = document.importNode(template.content, true);
+                const row = clone.querySelector('.team-member-row');
+                const nameElement = clone.querySelector('.engineer-name');
+                const salaryInput = clone.querySelector('.salary-input');
+                const roleSelect = clone.querySelector('.role-select');
+                const teamHeadBadge = clone.querySelector('.team-head-badge');
+                const projectEngineerBadge = clone.querySelector('.project-engineer-badge');
+                const deleteBtn = clone.querySelector('.delete-engineer-btn');
+                
+                // Set engineer data
+                row.setAttribute('data-engineer-id', assignment.engineer_id);
+                nameElement.textContent = assignment.engineer_name;
+                salaryInput.value = assignment.salary || '';
+                
+                // Set role
+                if (assignment.is_team_head) {
+                    roleSelect.value = 'head';
+                    teamHeadBadge.classList.remove('hidden');
+                } else {
+                    roleSelect.value = 'member';
+                    teamHeadBadge.classList.add('hidden');
+                }
+                
+                // Disable role selection for project engineer
+                if (assignment.engineer_id == projectEngineerId) {
+                    roleSelect.disabled = true;
+                    deleteBtn.style.display = 'none';
+                    projectEngineerBadge.classList.remove('hidden');
+                } else {
+                    projectEngineerBadge.classList.add('hidden');
+                }
+                
+                // Add event listeners
+                roleSelect.addEventListener('change', function() {
+                    const isTeamHead = this.value === 'head';
+                    teamHeadBadge.classList.toggle('hidden', !isTeamHead);
+                });
+                
+                deleteBtn.addEventListener('click', async function() {
+                    const engineerId = row.getAttribute('data-engineer-id');
+                    const engineerName = nameElement.textContent;
+                    const projectId = document.querySelector('#editDetailedEngineeringModal').getAttribute('data-project-id');
+                    
+                    // Confirm deletion
+                    if (!confirm(`Are you sure you want to remove ${engineerName} from this project?`)) {
+                        return;
+                    }
+                    
+                    try {
+                        // Show loading state
+                        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        deleteBtn.disabled = true;
+                        
+                        const response = await fetch(`/projects/${projectId}/remove-engineer/${engineerId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            // Remove the row from DOM
+                            row.remove();
+                            showCenteredNotification('Engineer removed successfully!', 'success', 2000);
+                            
+                            // If no more engineers, show empty state
+                            const remainingRows = document.querySelectorAll('#engineeringTeamList .team-member-row');
+                            if (remainingRows.length === 0) {
+                                teamList.innerHTML = `
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-users-slash text-3xl mb-2"></i>
+                                        <p>No engineers assigned to this project yet.</p>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            throw new Error(data.message || 'Failed to remove engineer');
+                        }
+                    } catch (error) {
+                        console.error('Error removing engineer:', error);
+                        showCenteredNotification(error.message || 'An error occurred while removing engineer', 'error', 3000);
+                        
+                        // Reset button state
+                        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                        deleteBtn.disabled = false;
+                    }
+                });
+                
+                teamList.appendChild(clone);
+            });
+        }
+        
+                 // Open Edit Detailed Engineering Modal
+         window.openEditDetailedEngineeringModal = function(projectId, projectName) {
+             console.log('Opening edit detailed engineering modal for project:', projectId, projectName);
+             
+             // Close the track record modal first
+             ModalManager.closeModal('trackRecordModal');
+             
+             // Set the project ID and name in the modal
+             const modal = document.getElementById('editDetailedEngineeringModal');
+             if (!modal) {
+                 console.error('Edit detailed engineering modal not found');
+                 showCenteredNotification('Error: Could not open detailed engineering editor', 'error', 2000);
+                 return;
+             }
+             
+             modal.setAttribute('data-project-id', projectId);
+             modal.setAttribute('data-project-name', projectName);
+             
+             // Update modal title
+             const modalTitle = modal.querySelector('h2');
+             if (modalTitle) {
+                 modalTitle.textContent = `Edit Detailed Engineering - ${projectName}`;
+             }
+             
+             // Show loading state
+             const teamList = document.getElementById('engineeringTeamList');
+             teamList.innerHTML = `
+                 <div class="text-center py-8 text-gray-400">
+                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                     <p>Loading team information...</p>
+                 </div>
+             `;
+             
+             // Show the modal
+             ModalManager.openModal('editDetailedEngineeringModal');
+             
+             // Load the team data
+             fetch(`/projects/${projectId}/monthly-assignments`)
+                 .then(response => response.json())
+                 .then(data => {
+                     console.log('Team data loaded:', data);
+                     renderDetailedEngineeringTeam(data.monthly_assignments || []);
+                 })
+                 .catch(error => {
+                     console.error('Error loading team data:', error);
+                     teamList.innerHTML = `
+                         <div class="text-center py-8 text-red-500">
+                             <div class="text-4xl mb-2">⚠️</div>
+                             <p>Failed to load team information.</p>
+                             <button onclick="openEditDetailedEngineeringModal(${projectId}, '${projectName}')" 
+                                     class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                 Try Again
+                             </button>
+                         </div>
+                     `;
+                 });
+         };
+         
+         // Load detailed engineering team data
+         window.loadDetailedEngineeringTeam = function(projectId) {
+            const modal = document.getElementById('editDetailedEngineeringModal');
+            if (!modal) return;
+            
+            // Set the project ID in the modal
+            modal.setAttribute('data-project-id', projectId);
+            
+            // Show loading state
+            const teamList = document.getElementById('engineeringTeamList');
+            teamList.innerHTML = `
+                <div class="text-center py-8 text-gray-400">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p>Loading team information...</p>
+                </div>
+            `;
+            
+                         // Show the modal
+             ModalManager.openModal('editDetailedEngineeringModal');
+            
+            // Load the team data
+            fetch(`/projects/${projectId}/monthly-assignments`)
+                .then(response => response.json())
+                .then(data => {
+                    // Store project engineer ID in the modal for reference
+                    if (data.project_engineer_id) {
+                        modal.setAttribute('data-project-engineer-id', data.project_engineer_id);
+                    }
+                    renderDetailedEngineeringTeam(data.monthly_assignments || []);
+                })
+                .catch(error => {
+                    console.error('Error loading team data:', error);
+                    teamList.innerHTML = `
+                        <div class="text-center py-8 text-red-500">
+                            <div class="text-4xl mb-2">⚠️</div>
+                            <p>Failed to load team information.</p>
+                            <button onclick="loadDetailedEngineeringTeam(${projectId})" 
+                                    class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                Try Again
+                            </button>
+                        </div>
+                    `;
+                });
+        };
+        
+                 // Close detailed engineering modal when clicking the close button or outside
+         document.getElementById('closeEditDetailedEngineeringModal')?.addEventListener('click', function() {
+             ModalManager.closeModal('editDetailedEngineeringModal');
+         });
+         
+         // Close modal when clicking outside the content
+         document.getElementById('editDetailedEngineeringModal')?.addEventListener('click', function(e) {
+             if (e.target === this) {
+                 ModalManager.closeModal('editDetailedEngineeringModal');
+             }
+         });
+         
+         // Handle cancel button click
+         document.getElementById('cancelEditDetailedEngineeringBtn')?.addEventListener('click', function() {
+             ModalManager.closeModal('editDetailedEngineeringModal');
+         });
+        
+                 // Handle save button click
+         document.getElementById('saveDetailedEngineeringBtn')?.addEventListener('click', async function() {
+             const modal = document.getElementById('editDetailedEngineeringModal');
+             const projectId = modal.getAttribute('data-project-id');
+             
+             // Show loading state
+             const originalButtonText = this.innerHTML;
+             this.disabled = true;
+             this.innerHTML = `
+                 <i class="fas fa-spinner fa-spin mr-2"></i>
+                 Saving...
+             `;
+             
+             try {
+                 // Collect all the updated data from the modal
+                 const teamMembers = [];
+                 const teamMemberRows = document.querySelectorAll('#engineeringTeamList .team-member-row');
+                 
+                 teamMemberRows.forEach(row => {
+                     const engineerId = row.getAttribute('data-engineer-id');
+                     const salaryInput = row.querySelector('.salary-input');
+                     const roleSelect = row.querySelector('.role-select');
+                     
+                     if (engineerId && salaryInput && roleSelect) {
+                         teamMembers.push({
+                             engineer_id: engineerId,
+                             salary: parseFloat(salaryInput.value) || 0,
+                             role: roleSelect.value,
+                             is_team_head: roleSelect.value === 'head'
+                         });
+                     }
+                 });
+                 
+                 console.log('Saving team data:', { projectId, teamMembers });
+                 
+                 // Send the updated data to the server
+                 const response = await fetch(`/projects/${projectId}/update-monthly-assignments`, {
+                     method: 'POST',
+                     headers: {
+                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                         'Accept': 'application/json',
+                         'Content-Type': 'application/json'
+                     },
+                     body: JSON.stringify({
+                         team_members: teamMembers
+                     })
+                 });
+                 
+                 const data = await response.json();
+                 
+                 if (response.ok) {
+                     // Show success message
+                     showCenteredNotification('Team salaries updated successfully!', 'success', 2000);
+                     
+                     // Close the modal
+                     ModalManager.closeModal('editDetailedEngineeringModal');
+                     
+                     // Show a button to manually refresh track record
+                     setTimeout(() => {
+                         if (confirm('Team salaries updated! Would you like to refresh the track record to see the changes?')) {
+                             const currentSelectedProjects = window.currentSelectedProjects || [];
+                             if (currentSelectedProjects.length > 0) {
+                                 openMultipleTrackRecordModal(currentSelectedProjects);
+                             }
+                         }
+                     }, 500);
+                     
+                     // Refresh the track record modal to show updated data
+                     setTimeout(() => {
+                         // Get the current selected projects and refresh the track record
+                         const currentSelectedProjects = window.currentSelectedProjects || [];
+                         console.log('Attempting to refresh track record...');
+                         console.log('Current selected projects:', currentSelectedProjects);
+                         
+                         if (currentSelectedProjects.length > 0) {
+                             console.log('Refreshing track record with projects:', currentSelectedProjects);
+                             
+                             // Force close any existing track record modal first
+                             ModalManager.closeModal('trackRecordModal');
+                             console.log('Track record modal closed');
+                             
+                             // Check if modal is actually closed
+                             const trackRecordModal = document.getElementById('trackRecordModal');
+                             if (trackRecordModal && !trackRecordModal.classList.contains('hidden')) {
+                                 console.log('Modal still open, forcing close...');
+                                 trackRecordModal.classList.add('hidden');
+                             }
+                             
+                             // Clear any cached data
+                             window.currentSelectedProjects = null;
+                             
+                             // Small delay to ensure modal is closed
+                             setTimeout(() => {
+                                 console.log('Opening track record modal with fresh data...');
+                                 // Force a fresh reload by clearing cache and reopening
+                                 openMultipleTrackRecordModal(currentSelectedProjects);
+                             }, 500); // Increased delay to ensure modal is fully closed
+                         } else {
+                             console.log('No current selected projects found for refresh');
+                         }
+                     }, 1500); // Increased delay to ensure save is complete
+                     
+                 } else {
+                     throw new Error(data.message || 'Failed to update team salaries');
+                 }
+                 
+             } catch (error) {
+                 console.error('Error saving team data:', error);
+                 showCenteredNotification(error.message || 'An error occurred while saving team data', 'error', 3000);
+             } finally {
+                 // Reset button state
+                 this.disabled = false;
+                 this.innerHTML = originalButtonText;
+             }
+         });
+        
+        // Initialize detailed engineering modal
         document.addEventListener('DOMContentLoaded', function() {
             const expenseForm = document.getElementById('addExpenseForm');
                 console.log('Looking for expense form:', expenseForm);
@@ -4366,5 +5087,8 @@ function performAjaxWithLoading(options) {
 </div>
 
     </div> <!-- Close main content div -->
+    
+         @include('projects.partials.edit_detailed_engineering_modal')
+    
 </body>
 </html>
